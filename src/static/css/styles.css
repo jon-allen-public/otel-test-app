@@ -1,0 +1,33 @@
+/* Basic styling for the navbar */
+nav {
+    background-color: #333;
+    padding: 1em;
+}
+nav a {
+    color: white;
+    text-decoration: none;
+    margin: 0 1em;
+}
+nav a:hover {
+    text-decoration: underline;
+}
+
+/* Center form and result */
+form, .result {
+    margin: 2em auto;
+    text-align: center;
+}
+
+/* Styling for result messages */
+.prime {
+    color: green;
+    font-weight: bold;
+}
+.not-prime {
+    color: orange;
+    font-weight: bold;
+}
+.error {
+    color: red;
+    font-weight: bold;
+}

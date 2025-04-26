@@ -1,0 +1,56 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+env/
+venv/
+.venv/
+
+# Python-specific files
+*.pyo
+*.pyd
+*.pdb
+
+# Logs and debug files
+*.log
+*.pot
+*.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Environment variables
+.env
+.env.*
+
+# Compiled C extensions
+*.so
+
+# Docker files
+docker-compose.override.yml
+.dockerignore
+*.tar
+
+# Docker volumes and containers
+volumes/
+*.pid
+
+# IDE-specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS-specific files
+.DS_Store
+Thumbs.db

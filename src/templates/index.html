@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Primes Calculator</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <nav>
+        <a href="/">Primes Calc</a>
+    </nav>
+    <h1>Primes Calculator</h1>
+
+    <div class="result">
+        {% if is_prime is not none %}
+            <p class="{% if is_prime %}prime{% else %}not-prime{% endif %}">
+                {{ number }} is {% if is_prime %}a prime{% else %}not a prime{% endif %} number.
+            </p>
+        {% elif error %}
+            <p class="error">{{ error }}</p>
+        {% else %}
+            <p>Enter number below to check if it is prime.</p>
+        {% endif %}
+    </div>
+
+    <form action="/" method="post">
+        <label for="prime-input">Number to check if it is prime:</label>
+        <input type="number" id="prime-input" name="prime-input" required>
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>
