@@ -38,7 +38,7 @@ helm install otel-test-app ./k8s/charts/otel-test-app
 
 See that chart's README for configuration details.
 
-For a GitOps deployment, see [`k8s/argocd`](k8s/argocd) for an ArgoCD `Application` that auto-syncs this chart from `main`.
+For a GitOps deployment, see [`k8s/argocd`](k8s/argocd) for an ArgoCD `Application` that auto-syncs this chart from `main` — including how to install ArgoCD itself on a fresh cluster like minikube and reach both the app and the ArgoCD UI locally.
 
 ## Notes
 
