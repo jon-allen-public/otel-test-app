@@ -2,7 +2,7 @@
 # builds and pushes both images from the same commit under this same tag, so a single
 # override (e.g. `--set image.tag=<git-sha>`) is enough to pin a release.
 image:
-  tag: "1.1.0"
+  tag: "1.2.0"
 
 flaskApp:
   replicaCount: 1
