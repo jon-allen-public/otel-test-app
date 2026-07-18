@@ -19,9 +19,9 @@ This starts four services:
 | `flask-app`    | Web UI (Gunicorn)                               | 8080 |
 | `celery-worker`| Runs the prime-check task                       | -    |
 | `redis`        | Celery broker/result backend                    | 6379 |
-| `otel-lgtm`    | OTLP collector + Grafana (metrics from the two apps above) | 3000 (Grafana), 4317/4318 (OTLP) |
+| `otel-lgtm`    | OTLP collector + Grafana (metrics, traces, and logs from the two apps above) | 3000 (Grafana), 4317/4318 (OTLP) |
 
-Once running, open **http://localhost:8080** for the app, or **http://localhost:3000** for Grafana (anonymous admin access) to view the metrics both apps emit via OpenTelemetry.
+Once running, open **http://localhost:8080** for the app, or **http://localhost:3000** for Grafana (anonymous admin access) to view the metrics, traces, and logs both apps emit via OpenTelemetry.
 
 To stop:
 

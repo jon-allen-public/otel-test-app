@@ -31,7 +31,7 @@ ArgoCD will create the `otel-test-app` namespace and start syncing.
 kubectl -n otel-test-app port-forward svc/otel-test-app-flask 8080:8080
 # -> http://localhost:8080
 
-# Grafana, for the metrics both apps emit via OpenTelemetry
+# Grafana, for the metrics/traces/logs both apps emit via OpenTelemetry
 kubectl -n otel-test-app port-forward svc/otel-test-app-otel-lgtm 3000:3000
 # -> http://localhost:3000 (anonymous admin access)
 

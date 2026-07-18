@@ -28,23 +28,26 @@ Then visit http://localhost:8080. Set `flaskApp.service.type=LoadBalancer` or en
 | `redis.image.repository`/`tag` | `redis`/`alpine` | Redis broker/result backend |
 | `flaskApp.service.type` | `ClusterIP` | How the Flask service is exposed |
 | `ingress.enabled` | `false` | Enable an Ingress in front of the Flask service |
-| `otel.enabled` | `true` | Wire OTLP metrics env vars into both app deployments |
+| `otel.enabled` | `true` | Wire OTLP metrics/traces/logs env vars into both app deployments |
 | `otel.exporterEndpoint` | `""` | OTLP endpoint to export to; if empty, defaults to the bundled `otel-lgtm` collector |
 | `otelLgtm.enabled` | `true` | Deploy the bundled `grafana/otel-lgtm` collector + Grafana |
 
 The chart wires `CELERY_BROKER_URL`/`CELERY_RESULT_BACKEND` on both the Flask app and the Celery worker to the in-cluster Redis service automatically — no values needed for that.
 
-## Metrics
+## Observability
 
-Both app deployments run under `opentelemetry-instrument` (see the root `CLAUDE.md`), exporting metrics only (`OTEL_TRACES_EXPORTER`/`OTEL_LOGS_EXPORTER` are `none`) via OTLP. By default they point at the chart's own `otel-lgtm` Deployment, which bundles an OTel Collector (OTLP gRPC on 4317) with Grafana + Mimir/Prometheus for viewing them:
+Both app deployments run under `opentelemetry-instrument` (see the root `CLAUDE.md`) and export metrics, traces, and logs via OTLP. By default they point at the chart's own `otel-lgtm` Deployment, which bundles an OTel Collector (OTLP gRPC on 4317) with Grafana + Mimir (metrics) + Tempo (traces) + Loki (logs) for viewing them:
 
 ```bash
 kubectl port-forward svc/otel-test-app-otel-lgtm 3000:3000
 ```
 
-Then open http://localhost:3000 (anonymous admin access, no login) and explore the `Metrics` (Prometheus/Mimir) datasource — look for `http_server_duration_milliseconds_*` (Flask) and `flower_task_runtime_seconds_*` (`check_prime` task duration, from Celery auto-instrumentation).
+Then open http://localhost:3000 (anonymous admin access, no login) and use Explore:
+- **Metrics** (Prometheus/Mimir datasource) — `http_server_duration_milliseconds_*` (Flask) and `flower_task_runtime_seconds_*` (`check_prime` task duration, from Celery auto-instrumentation)
+- **Tempo** — search by `service.name` = `otel-test-app-flask` / `otel-test-app-celery`
+- **Loki** — query `{service_name="otel-test-app-flask"}` or `{service_name="otel-test-app-celery"}` for request/task logs
 
-To send metrics to your own collector instead, set `otel.exporterEndpoint` and `otelLgtm.enabled=false`.
+To send telemetry to your own collector instead, set `otel.exporterEndpoint` and `otelLgtm.enabled=false`.
 
 ## Versioning
 
