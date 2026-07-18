@@ -12,15 +12,16 @@ A minimal Flask app that checks whether a number is prime, using a Celery worker
 docker compose up --build
 ```
 
-This starts three services:
+This starts four services:
 
-| Service        | Description                          | Port |
-|----------------|---------------------------------------|------|
-| `flask-app`    | Web UI (Gunicorn)                     | 8080 |
-| `celery-worker`| Runs the prime-check task             | -    |
-| `redis`        | Celery broker/result backend          | 6379 |
+| Service        | Description                                    | Port |
+|----------------|-------------------------------------------------|------|
+| `flask-app`    | Web UI (Gunicorn)                               | 8080 |
+| `celery-worker`| Runs the prime-check task                       | -    |
+| `redis`        | Celery broker/result backend                    | 6379 |
+| `otel-lgtm`    | OTLP collector + Grafana (metrics from the two apps above) | 3000 (Grafana), 4317/4318 (OTLP) |
 
-Once running, open **http://localhost:8080**.
+Once running, open **http://localhost:8080** for the app, or **http://localhost:3000** for Grafana (anonymous admin access) to view the metrics both apps emit via OpenTelemetry.
 
 To stop:
 

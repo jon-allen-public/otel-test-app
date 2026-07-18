@@ -31,3 +31,14 @@ Redis connection URL used by both the Flask app and the Celery worker.
 {{- define "otel-test-app.redisUrl" -}}
 redis://{{ include "otel-test-app.fullname" . }}-redis:{{ .Values.redis.service.port }}/0
 {{- end -}}
+
+{{/*
+OTLP gRPC endpoint used by both the Flask app and the Celery worker.
+*/}}
+{{- define "otel-test-app.otlpEndpoint" -}}
+{{- if .Values.otel.exporterEndpoint -}}
+{{ .Values.otel.exporterEndpoint }}
+{{- else -}}
+http://{{ include "otel-test-app.fullname" . }}-otel-lgtm:{{ .Values.otelLgtm.service.otlpGrpcPort }}
+{{- end -}}
+{{- end -}}

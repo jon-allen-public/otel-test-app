@@ -2,3 +2,5 @@ Flask
 Gunicorn
 celery
 redis
+opentelemetry-distro
+opentelemetry-exporter-otlp

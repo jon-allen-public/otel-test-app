@@ -10,12 +10,13 @@ COPY . /app/
 # Set PYTHONPATH to include the src directory
 ENV PYTHONPATH=/app/src
 
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Install dependencies, then install OTel auto-instrumentation packages matching
+# what's actually installed (Flask, Celery, Redis, ...)
+RUN pip install --no-cache-dir -r requirements.txt && opentelemetry-bootstrap -a install
 
 # Create a non-root user
 RUN useradd -ms /bin/bash celeryuser
 USER celeryuser
 
 # Command to run the Celery worker
-CMD ["celery", "-A", "src.main.celery", "worker", "--loglevel=info"]
+CMD ["opentelemetry-instrument", "celery", "-A", "src.main.celery", "worker", "--loglevel=info"]

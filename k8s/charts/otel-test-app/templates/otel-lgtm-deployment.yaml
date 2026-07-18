@@ -1,0 +1,34 @@
+{{- if .Values.otelLgtm.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "otel-test-app.fullname" . }}-otel-lgtm
+  labels:
+    {{- include "otel-test-app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: otel-lgtm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: otel-lgtm
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: otel-lgtm
+    spec:
+      containers:
+        - name: otel-lgtm
+          image: "{{ .Values.otelLgtm.image.repository }}:{{ .Values.otelLgtm.image.tag }}"
+          imagePullPolicy: {{ .Values.otelLgtm.image.pullPolicy }}
+          ports:
+            - name: grafana
+              containerPort: 3000
+            - name: otlp-grpc
+              containerPort: 4317
+            - name: otlp-http
+              containerPort: 4318
+          resources:
+            {{- toYaml .Values.otelLgtm.resources | nindent 12 }}
+{{- end }}

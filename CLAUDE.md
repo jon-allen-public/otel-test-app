@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A minimal Flask web app that checks whether a number is prime. The check runs as an asynchronous Celery task (Redis as broker/backend) rather than inline in the request handler — this app exists to exercise that async request/worker pattern (likely as an OpenTelemetry instrumentation test target, per the repo name), not for the prime-checking logic itself.
+A minimal Flask web app that checks whether a number is prime. The check runs as an asynchronous Celery task (Redis as broker/backend) rather than inline in the request handler — this app exists to exercise that async request/worker pattern as an OpenTelemetry instrumentation test target (per the repo name), not for the prime-checking logic itself. Both the Flask app and the Celery worker are instrumented and emit metrics (see Observability below).
 
 ## Running locally
 
@@ -17,6 +17,12 @@ docker compose up --build
 This starts three services: `flask-app` (port 8080), `celery-worker`, and `redis` (port 6379). The Flask app depends on `redis` and `celery-worker` for the prime-check task to ever complete — `POST /` blocks on `task.get(timeout=30)`, so if the worker or Redis isn't running, requests will hang for 30s and then fail.
 
 There are no automated tests or linter. `.github/workflows/build.yaml` builds and pushes both images: a push to `main` refreshes the `latest` tag, and pushing a `vX.Y.Z` git tag additionally publishes a semver-tagged release (`X.Y.Z`) — that's what the Helm chart below pins to.
+
+## Observability (OpenTelemetry metrics)
+
+Both images install `opentelemetry-distro` + `opentelemetry-exporter-otlp`, then run `opentelemetry-bootstrap -a install` at build time — this detects the libraries actually present (Flask, Celery, Redis) and installs matching auto-instrumentation packages, so `src/main.py` itself has zero OTel code. Both `CMD`s are wrapped with `opentelemetry-instrument` (see `Dockerfile`/`Dockerfile.celery`), which reads standard `OTEL_*` env vars from the process environment at startup — those are set by whatever's deploying the containers (docker-compose, the Helm chart), not baked into the images, since `config.py`'s `app.config` is never consulted for them.
+
+Only metrics are exported (`OTEL_TRACES_EXPORTER=none`, `OTEL_LOGS_EXPORTER=none`) via OTLP to `grafana/otel-lgtm` — an all-in-one image bundling an OTel Collector (OTLP on 4317/4318) with Grafana + Mimir/Prometheus, so there's somewhere to view metrics with zero extra setup. `docker-compose.yml` runs it as a fourth service (`otel-lgtm`, port 3000 for Grafana); the Helm chart deploys the same image as its own component (see Kubernetes deployment below). Look for `http_server_duration_milliseconds_*` (Flask, from WSGI auto-instrumentation) and `flower_task_runtime_seconds_*` (the `check_prime` Celery task, from Celery auto-instrumentation).
 
 ## Architecture
 
@@ -37,7 +43,7 @@ There are no automated tests or linter. `.github/workflows/build.yaml` builds an
 
 ## Kubernetes deployment
 
-`k8s/charts/otel-test-app` is a Helm chart deploying the same three components (Flask app, Celery worker, Redis) as separate Deployments/Services, wiring `CELERY_BROKER_URL`/`CELERY_RESULT_BACKEND` to the in-cluster Redis service automatically. Both app images share a single `image.tag` value (default `latest`) since CI always builds them from the same commit under the same tag — pin a specific release with `--set image.tag=<X.Y.Z>` (see Versioning above). See that chart's `README.md` for full values and usage.
+`k8s/charts/otel-test-app` is a Helm chart deploying the same components (Flask app, Celery worker, Redis, and by default `otel-lgtm`) as separate Deployments/Services, wiring `CELERY_BROKER_URL`/`CELERY_RESULT_BACKEND` and the `OTEL_*` env vars (see Observability above) to their respective in-cluster services automatically. Both app images share a single `image.tag` value (default `latest`) since CI always builds them from the same commit under the same tag — pin a specific release with `--set image.tag=<X.Y.Z>` (see Versioning above). Set `otel.exporterEndpoint`/`otelLgtm.enabled=false` to point at an external collector instead of the bundled one. See that chart's `README.md` for full values and usage.
 
 `k8s/argocd/application.yaml` is an ArgoCD `Application` that deploys that chart from `main` with automated sync (`prune` + `selfHeal`) — image versioning stays git-driven (no Image Updater), so a release is two commits: tag `vX.Y.Z` to build the images, then bump `image.tag` in `values.yaml` on `main` to actually deploy it. See `k8s/argocd/README.md`, which also covers installing ArgoCD itself and reaching the app/ArgoCD UI on a local cluster like minikube (images are public on ghcr.io, so no pull secret is needed there).
 

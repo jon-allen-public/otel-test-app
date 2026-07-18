@@ -29,5 +29,17 @@ spec:
               value: {{ include "otel-test-app.redisUrl" . }}
             - name: CELERY_RESULT_BACKEND
               value: {{ include "otel-test-app.redisUrl" . }}
+            {{- if .Values.otel.enabled }}
+            - name: OTEL_SERVICE_NAME
+              value: {{ include "otel-test-app.fullname" . }}-flask
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: {{ include "otel-test-app.otlpEndpoint" . }}
+            - name: OTEL_METRICS_EXPORTER
+              value: otlp
+            - name: OTEL_TRACES_EXPORTER
+              value: none
+            - name: OTEL_LOGS_EXPORTER
+              value: none
+            {{- end }}
           resources:
             {{- toYaml .Values.flaskApp.resources | nindent 12 }}

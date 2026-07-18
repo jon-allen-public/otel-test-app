@@ -30,6 +30,27 @@ redis:
     port: 6379
   resources: {}
 
+otel:
+  enabled: true
+  # If empty, both app deployments point at the bundled otel-lgtm collector below.
+  # Set this to use an external OTLP endpoint instead.
+  exporterEndpoint: ""
+
+# grafana/otel-lgtm bundles an OTel Collector (OTLP on 4317/4318) with
+# Grafana + Mimir/Prometheus (+ Tempo/Loki, unused here since only metrics
+# are exported) so there's somewhere to send and view metrics out of the box.
+otelLgtm:
+  enabled: true
+  image:
+    repository: grafana/otel-lgtm
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    grafanaPort: 3000
+    otlpGrpcPort: 4317
+    otlpHttpPort: 4318
+  resources: {}
+
 ingress:
   enabled: false
   className: ""

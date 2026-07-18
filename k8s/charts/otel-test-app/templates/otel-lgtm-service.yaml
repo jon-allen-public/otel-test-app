@@ -1,0 +1,27 @@
+{{- if .Values.otelLgtm.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "otel-test-app.fullname" . }}-otel-lgtm
+  labels:
+    {{- include "otel-test-app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: otel-lgtm
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.otelLgtm.service.grafanaPort }}
+      targetPort: grafana
+      protocol: TCP
+      name: grafana
+    - port: {{ .Values.otelLgtm.service.otlpGrpcPort }}
+      targetPort: otlp-grpc
+      protocol: TCP
+      name: otlp-grpc
+    - port: {{ .Values.otelLgtm.service.otlpHttpPort }}
+      targetPort: otlp-http
+      protocol: TCP
+      name: otlp-http
+  selector:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: otel-lgtm
+{{- end }}
