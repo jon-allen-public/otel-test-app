@@ -42,12 +42,16 @@ Both app deployments run under `opentelemetry-instrument` (see the root `CLAUDE.
 kubectl port-forward svc/otel-test-app-otel-lgtm 3000:3000
 ```
 
-Then open http://localhost:3000 (anonymous admin access, no login) and use Explore:
+Then open http://localhost:3000 (anonymous admin access, no login). There's a pre-built **otel-test-app** dashboard (`dashboards/otel-test-app.json`, auto-provisioned into the bundled Grafana — see below) covering HTTP request rate/duration/errors, Celery task rate/duration, and Redis operation rate/latency (derived from Tempo's span-metrics, since the Redis client itself only emits spans, not metrics), plus a combined logs panel. Or use Explore directly:
 - **Metrics** (Prometheus/Mimir datasource) — `http_server_duration_milliseconds_*` (Flask) and `flower_task_runtime_seconds_*` (`check_prime` task duration, from Celery auto-instrumentation)
 - **Tempo** — search by `service.name` = `otel-test-app-flask` / `otel-test-app-celery`
 - **Loki** — query `{service_name="otel-test-app-flask"}` or `{service_name="otel-test-app-celery"}` for request/task logs
 
 To send telemetry to your own collector instead, set `otel.exporterEndpoint` and `otelLgtm.enabled=false`.
+
+### Dashboard provisioning
+
+`dashboards/grafana-dashboards.yaml` replaces the `otel-lgtm` image's own dashboard-provisioning config wholesale (Grafana's file provisioner takes one YAML as the full source of truth, not a merge) — it re-declares the image's built-in RED-metrics/JVM dashboards by their in-image paths, then adds a fourth provider pointing at `/otel-lgtm/custom-dashboards`, where `otel-test-app.json` gets mounted. In the Helm chart this is a ConfigMap (`otel-lgtm-dashboards-configmap.yaml`) built from `.Files.Get` and mounted into the `otel-lgtm` Deployment; `docker-compose.yml` bind-mounts the same two files directly. Edit `dashboards/otel-test-app.json` and redeploy to change the dashboard — there's a single source of truth for both.
 
 ## Versioning
 

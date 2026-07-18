@@ -31,4 +31,15 @@ spec:
               containerPort: 4318
           resources:
             {{- toYaml .Values.otelLgtm.resources | nindent 12 }}
+          volumeMounts:
+            - name: dashboards
+              mountPath: /otel-lgtm/grafana/conf/provisioning/dashboards/grafana-dashboards.yaml
+              subPath: grafana-dashboards.yaml
+            - name: dashboards
+              mountPath: /otel-lgtm/custom-dashboards/otel-test-app.json
+              subPath: otel-test-app.json
+      volumes:
+        - name: dashboards
+          configMap:
+            name: {{ include "otel-test-app.fullname" . }}-otel-lgtm-dashboards
 {{- end }}

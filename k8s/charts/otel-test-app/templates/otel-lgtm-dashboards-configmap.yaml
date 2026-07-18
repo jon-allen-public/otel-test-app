@@ -1,0 +1,14 @@
+{{- if .Values.otelLgtm.enabled -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "otel-test-app.fullname" . }}-otel-lgtm-dashboards
+  labels:
+    {{- include "otel-test-app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: otel-lgtm
+data:
+  grafana-dashboards.yaml: |-
+{{ .Files.Get "dashboards/grafana-dashboards.yaml" | indent 4 }}
+  otel-test-app.json: |-
+{{ .Files.Get "dashboards/otel-test-app.json" | indent 4 }}
+{{- end }}
