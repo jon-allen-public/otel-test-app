@@ -28,6 +28,18 @@ To stop:
 docker compose down
 ```
 
+## Deploying to Kubernetes
+
+A Helm chart is available at [`k8s/charts/otel-test-app`](k8s/charts/otel-test-app):
+
+```bash
+helm install otel-test-app ./k8s/charts/otel-test-app
+```
+
+See that chart's README for configuration details.
+
+For a GitOps deployment, see [`k8s/argocd`](k8s/argocd) for an ArgoCD `Application` that auto-syncs this chart from `main`.
+
 ## Notes
 
 - `flask-app` and `celery-worker` both depend on `redis`; if either `redis` or `celery-worker` isn't up, submitting a number will hang for ~30s and then fail (the request blocks waiting on the Celery task result).

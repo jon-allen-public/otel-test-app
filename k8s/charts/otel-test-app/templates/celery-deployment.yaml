@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "otel-test-app.fullname" . }}-celery-worker
+  labels:
+    {{- include "otel-test-app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: celery-worker
+spec:
+  replicas: {{ .Values.celeryWorker.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: celery-worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: celery-worker
+    spec:
+      containers:
+        - name: celery-worker
+          image: "{{ .Values.celeryWorker.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.celeryWorker.image.pullPolicy }}
+          env:
+            - name: CELERY_BROKER_URL
+              value: {{ include "otel-test-app.redisUrl" . }}
+            - name: CELERY_RESULT_BACKEND
+              value: {{ include "otel-test-app.redisUrl" . }}
+          resources:
+            {{- toYaml .Values.celeryWorker.resources | nindent 12 }}

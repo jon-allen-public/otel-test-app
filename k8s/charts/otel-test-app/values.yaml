@@ -1,0 +1,42 @@
+# Shared tag for the flask-app and celery-worker images. CI (.github/workflows/build.yaml)
+# builds and pushes both images from the same commit under this same tag, so a single
+# override (e.g. `--set image.tag=<git-sha>`) is enough to pin a release.
+image:
+  tag: latest
+
+flaskApp:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/jon-allen-public/otel-test-app
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8080
+  resources: {}
+
+celeryWorker:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/jon-allen-public/otel-test-app-celery
+    pullPolicy: IfNotPresent
+  resources: {}
+
+redis:
+  image:
+    repository: redis
+    tag: alpine
+    pullPolicy: IfNotPresent
+  service:
+    port: 6379
+  resources: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []

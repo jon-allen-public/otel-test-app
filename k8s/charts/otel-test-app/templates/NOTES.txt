@@ -1,0 +1,15 @@
+otel-test-app has been deployed.
+
+{{- if .Values.ingress.enabled }}
+{{- range .Values.ingress.hosts }}
+Visit http://{{ .host }}{{ (index .paths 0).path }} to use the app.
+{{- end }}
+{{- else if eq .Values.flaskApp.service.type "ClusterIP" }}
+The flask-app service is ClusterIP-only. Reach it with:
+  kubectl port-forward -n {{ .Release.Namespace }} svc/{{ include "otel-test-app.fullname" . }}-flask {{ .Values.flaskApp.service.port }}:{{ .Values.flaskApp.service.port }}
+Then visit http://localhost:{{ .Values.flaskApp.service.port }}
+{{- else }}
+Run:
+  kubectl get svc -n {{ .Release.Namespace }} {{ include "otel-test-app.fullname" . }}-flask
+to find how to reach the app.
+{{- end }}

@@ -16,7 +16,7 @@ docker compose up --build
 
 This starts three services: `flask-app` (port 8080), `celery-worker`, and `redis` (port 6379). The Flask app depends on `redis` and `celery-worker` for the prime-check task to ever complete — `POST /` blocks on `task.get(timeout=30)`, so if the worker or Redis isn't running, requests will hang for 30s and then fail.
 
-There are no automated tests, linter, or CI checks beyond building/pushing Docker images (`.github/workflows/build.yaml`, triggered on push to `main`).
+There are no automated tests or linter. `.github/workflows/build.yaml` builds and pushes both images: a push to `main` refreshes the `latest` tag, and pushing a `vX.Y.Z` git tag additionally publishes a semver-tagged release (`X.Y.Z`) — that's what the Helm chart below pins to.
 
 ## Architecture
 
@@ -34,3 +34,9 @@ There are no automated tests, linter, or CI checks beyond building/pushing Docke
 
 - `src/templates/index.html` — single Jinja2 template, renders the form and result inline (`is_prime`/`number`/`error` passed from the view).
 - `src/static/css/styles.css` — styling for that template.
+
+## Kubernetes deployment
+
+`k8s/charts/otel-test-app` is a Helm chart deploying the same three components (Flask app, Celery worker, Redis) as separate Deployments/Services, wiring `CELERY_BROKER_URL`/`CELERY_RESULT_BACKEND` to the in-cluster Redis service automatically. Both app images share a single `image.tag` value (default `latest`) since CI always builds them from the same commit under the same tag — pin a specific release with `--set image.tag=<X.Y.Z>` (see Versioning above). See that chart's `README.md` for full values and usage.
+
+`k8s/argocd/application.yaml` is an ArgoCD `Application` that deploys that chart from `main` with automated sync (`prune` + `selfHeal`) — image versioning stays git-driven (no Image Updater), so a release is two commits: tag `vX.Y.Z` to build the images, then bump `image.tag` in `values.yaml` on `main` to actually deploy it. See `k8s/argocd/README.md`.

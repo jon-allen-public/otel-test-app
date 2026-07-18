@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
 
 jobs:
   build:
@@ -22,18 +24,38 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # A `vX.Y.Z` tag push produces an immutable semver-tagged release (plus `latest`);
+      # a plain push to `main` just refreshes `latest`. The Helm chart's `image.tag`
+      # value pins to a specific semver release.
+      - name: Compute image tag
+        id: version
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            echo "tag=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=latest" >> "$GITHUB_OUTPUT"
+          fi
+
       # Build the Flask app Docker image
       - name: Build Flask app Docker image
-        run: docker build -t ghcr.io/${{ github.repository_owner }}/otel-test-app:latest -f Dockerfile .
+        run: |
+          docker build -t ghcr.io/${{ github.repository_owner }}/otel-test-app:${{ steps.version.outputs.tag }} -f Dockerfile .
+          if [ "${{ steps.version.outputs.tag }}" != "latest" ]; then
+            docker tag ghcr.io/${{ github.repository_owner }}/otel-test-app:${{ steps.version.outputs.tag }} ghcr.io/${{ github.repository_owner }}/otel-test-app:latest
+          fi
 
       # Push the Flask app Docker image
       - name: Push Flask app Docker image
-        run: docker push ghcr.io/${{ github.repository_owner }}/otel-test-app:latest
+        run: docker push --all-tags ghcr.io/${{ github.repository_owner }}/otel-test-app
 
       # Build the Celery worker Docker image
       - name: Build Celery worker Docker image
-        run: docker build -t ghcr.io/${{ github.repository_owner }}/otel-test-app-celery:latest -f Dockerfile.celery .
+        run: |
+          docker build -t ghcr.io/${{ github.repository_owner }}/otel-test-app-celery:${{ steps.version.outputs.tag }} -f Dockerfile.celery .
+          if [ "${{ steps.version.outputs.tag }}" != "latest" ]; then
+            docker tag ghcr.io/${{ github.repository_owner }}/otel-test-app-celery:${{ steps.version.outputs.tag }} ghcr.io/${{ github.repository_owner }}/otel-test-app-celery:latest
+          fi
 
       # Push the Celery worker Docker image
       - name: Push Celery worker Docker image
-        run: docker push ghcr.io/${{ github.repository_owner }}/otel-test-app-celery:latest
+        run: docker push --all-tags ghcr.io/${{ github.repository_owner }}/otel-test-app-celery
